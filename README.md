@@ -1,6 +1,6 @@
 # 🗑️ RecycleBin Forensic Explorer
 
-  ![](Screenshots/banner.png)
+  ![](/Screenshots/banner.png)
 
 **A hassle-free GUI tool for Windows Recycle Bin forensic analysis - Browse deleted files without complex $I/$R parsing**
 
