@@ -1,6 +1,6 @@
 # 🗑️ RecycleBin Forensic Explorer
 
-  ![](/screenshots/banner.png)
+  ![](/Screenshots/banner.png)
 
 **A hassle-free GUI tool for Windows Recycle Bin forensic analysis - Browse deleted files without complex $I/$R parsing**
 
@@ -109,13 +109,13 @@ Traditional Recycle Bin forensics requires:
 
   
 
-## 📸 Screenshots
+## 📸 /Screenshots
 
   
 
 ### Evidence Tree View
 
-![Evidence Tree](screenshots/Evidence-Tree-right-click-export.png)
+![Evidence Tree](/Screenshots/Evidence-Tree-right-click-export.png)
 
 *Browse through deleted items organized by user SID with comprehensive metadata display*
 
@@ -123,7 +123,7 @@ Traditional Recycle Bin forensics requires:
 
 ### File List View
 
-![List View](screenshots/List%20view%20files.png)
+![List View](/Screenshots/List%20view%20files.png)
 
 *Detailed tabular view of all recovered Recycle Bin artifacts with sortable columns*
 
@@ -131,7 +131,7 @@ Traditional Recycle Bin forensics requires:
 
 ### Export Options
 
-![Export Dialog](screenshots/Export-dialog-files.png)
+![Export Dialog](/Screenshots/Export-dialog-files.png)
 
 *Flexible export options for CSV, JSON, and HTML report generation*
 
@@ -139,7 +139,7 @@ Traditional Recycle Bin forensics requires:
 
 ### Statistics Dashboard
 
-![Statistics](screenshots/Statistics.png)
+![Statistics](/Screenshots/Statistics.png)
 
 *Visual analytics showing deletion patterns, file types, and timeline distributions*
 
@@ -147,7 +147,7 @@ Traditional Recycle Bin forensics requires:
 
 ### Report Generation
 
-![Report Export](screenshots/Export-report-$I-$R-csv.png)
+![Report Export](/Screenshots/Export-report-$I-$R-csv.png)
 
 *Professional CSV export with all forensic metadata preserved for further analysis*
 
@@ -155,7 +155,7 @@ Traditional Recycle Bin forensics requires:
 
 ### Context Menu Operations
 
-![Context Menu](screenshots/File%20right%20click%20context%20menu.png)
+![Context Menu](/Screenshots/File%20right%20click%20context%20menu.png)
 
 *Quick access to export, copy, and analysis functions via right-click menu*
 
@@ -163,7 +163,7 @@ Traditional Recycle Bin forensics requires:
 
 ### File Dialog
 
-![File Dialog](screenshots/File-Dialog.png)
+![File Dialog](/Screenshots/File-Dialog.png)
 
 *Easy selection of Recycle Bin sources from local or mounted forensic images*
 
@@ -171,7 +171,7 @@ Traditional Recycle Bin forensics requires:
 
 ### Dark Mode Interface
 
-![Dark Mode](screenshots/Dark-Mode-Screenshot.png)
+![Dark Mode](/Screenshots/Dark-Mode-Screenshot.png)
 
 *Comfortable dark theme for extended forensic analysis sessions*
 
@@ -179,7 +179,7 @@ Traditional Recycle Bin forensics requires:
 
 ### Light Mode Interface
 
-![Light Mode](screenshots/Light-Mode-Evidence-Tree-Tiles.png)
+![Light Mode](/Screenshots/Light-Mode-Evidence-Tree-Tiles.png)
 
 *Professional light theme with tile view for evidence presentation*
 
