@@ -4083,6 +4083,7 @@ class MainWindow(QMainWindow):
         # Icon block with soft background
         file_name = os.path.basename(artifact['original_path'])
         file_ext = artifact.get('file_ext', '').lower()
+        
 
         icon_bg = "#f6f8fa" if not self.is_dark_mode else "#0f172a"
         icon_frame = QFrame()
@@ -4114,11 +4115,20 @@ class MainWindow(QMainWindow):
         name_label = QLabel(file_name_display)
         name_label.setAlignment(Qt.AlignCenter)
         name_label.setWordWrap(True)
-        name_label.setFixedWidth(130)  # Match tile width minus margins
+        name_label.setFixedWidth(130)
         name_label.setMinimumHeight(32)
-        name_label.setMaximumHeight(48)  # Allow up to 3 lines
+        name_label.setMaximumHeight(48)
         name_label.setStyleSheet(f"font-size: 10px; font-weight: 600; color: {text_color}; background: transparent; border: none;")
-        name_label.setToolTip(artifact['original_path'])
+
+        # Force a light-colored tooltip so it stays readable on the dark tooltip background in light mode
+        safe_path = (
+            artifact['original_path']
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+        #name_label.setToolTip(f"<span style='color:#f8fafc;'>{safe_path}</span>")
+        name_label.setToolTip(f"<div style='color:#f8fafc; white-space: pre; display: inline-block;'>{safe_path}</div>")
         layout.addWidget(name_label, 0, Qt.AlignCenter)
 
         # Metadata block (size + date) with subtle border
@@ -4148,7 +4158,28 @@ class MainWindow(QMainWindow):
                 date_label = QLabel(f"🗑 {date_text}")
                 date_label.setAlignment(Qt.AlignCenter)
                 date_label.setStyleSheet(f"font-size: 9px; color: {date_color}; background: transparent;")
-                date_label.setToolTip(f"Deleted: {self.format_datetime_tz(artifact['deletion_time'])}")
+                try:
+                    utc_text = artifact['deletion_time'].astimezone(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+                except Exception:
+                    utc_text = str(artifact.get('deletion_time', ''))
+                local_text = self.format_datetime_tz(artifact['deletion_time'], include_tz_label=True)
+
+                tip_color = "#e5e7eb"
+
+                # Avoid duplicate line when current timezone is UTC
+                #lines = [f"Deleted (UTC): {utc_text}"]
+                if str(self.current_timezone).upper() != "UTC":
+                    line = f"Deleted ({self.current_timezone}): {local_text}"
+                else:
+                    line = f"Deleted (UTC): {utc_text}"
+
+                # tooltip_html = (
+                    # f"<div style='color:{tip_color}; font-size:11px;'>"
+                     # + "<br>".join(lines) +
+                    # "</div>"
+                # )
+                tooltip_html = f"<div style='color:{tip_color}; font-size:11px; white-space:nowrap;'>{line}</div>"
+                date_label.setToolTip(tooltip_html)
                 meta_layout.addWidget(date_label)
 
         layout.addWidget(meta_block)
@@ -4553,26 +4584,6 @@ class MainWindow(QMainWindow):
             self.apply_dark_theme()
         else:
             self.apply_modern_theme()
-        
-        # Force tooltip palette AFTER theme is applied to ensure consistency
-        # This overrides any palette changes made by apply_*_theme()
-        palette = QApplication.palette()
-        palette.setColor(QPalette.ToolTipBase, QColor(36, 41, 47))  # Dark #24292f
-        palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))  # White #ffffff
-        QApplication.setPalette(palette)
-        
-        # Also re-apply tooltip stylesheet at app level
-        QApplication.instance().setStyleSheet("""
-            QToolTip {
-                background-color: #24292f;
-                color: #ffffff;
-                border: 1px solid #30363d;
-                border-radius: 6px;
-                padding: 8px 12px;
-                font-size: 12px;
-                font-family: 'Segoe UI', sans-serif;
-            }
-        """)
 
         if hasattr(self, "left_widget"):
             if self.is_dark_mode:
@@ -5571,22 +5582,53 @@ class MainWindow(QMainWindow):
         
         # Create menu
         menu = QMenu(self)
-        menu.setStyleSheet("""
-            QMenu {
-                background-color: white;
-                border: 1px solid #ced4da;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QMenu::item {
-                padding: 8px 20px;
-                border-radius: 3px;
-            }
-            QMenu::item:selected {
-                background-color: #007bff;
-                color: white;
-            }
-        """)
+        # Theme-aware styling for readability in both light and dark modes
+        if self.is_dark_mode:
+            menu.setStyleSheet("""
+                QMenu {
+                    background-color: #0b1220;
+                    border: 1px solid #334155;
+                    border-radius: 8px;
+                    padding: 6px;
+                }
+                QMenu::item {
+                    padding: 8px 24px 8px 12px;
+                    border-radius: 4px;
+                    color: #e2e8f0;
+                }
+                QMenu::item:selected {
+                    background-color: #111827;
+                    color: #ffffff;
+                }
+                QMenu::separator {
+                    height: 1px;
+                    background-color: #1f2937;
+                    margin: 4px 8px;
+                }
+            """)
+        else:
+            menu.setStyleSheet("""
+                QMenu {
+                    background-color: #ffffff;
+                    border: 1px solid #ced4da;
+                    border-radius: 5px;
+                    padding: 5px;
+                }
+                QMenu::item {
+                    padding: 8px 20px;
+                    border-radius: 3px;
+                    color: #1e293b;
+                }
+                QMenu::item:selected {
+                    background-color: #007bff;
+                    color: white;
+                }
+                QMenu::separator {
+                    height: 1px;
+                    background-color: #e2e8f0;
+                    margin: 4px 8px;
+                }
+            """)
         
         # Add actions based on item type
         if item_data == "root":
@@ -5626,26 +5668,60 @@ class MainWindow(QMainWindow):
         
         # Create menu
         menu = QMenu(self)
-        menu.setStyleSheet("""
-            QMenu {
-                background-color: white;
-                border: 1px solid #ced4da;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QMenu::item {
-                padding: 8px 20px;
-                border-radius: 3px;
-            }
-            QMenu::item:selected {
-                background-color: #007bff;
-                color: white;
-            }
-        """)
+        # Theme-aware styling for readability in both light and dark modes
+        if self.is_dark_mode:
+            menu.setStyleSheet("""
+                QMenu {
+                    background-color: #0b1220;
+                    border: 1px solid #334155;
+                    border-radius: 8px;
+                    padding: 6px;
+                }
+                QMenu::item {
+                    padding: 8px 24px 8px 12px;
+                    border-radius: 4px;
+                    color: #e2e8f0;
+                }
+                QMenu::item:selected {
+                    background-color: #111827;
+                    color: #ffffff;
+                }
+                QMenu::separator {
+                    height: 1px;
+                    background-color: #1f2937;
+                    margin: 4px 8px;
+                }
+            """)
+        else:
+            menu.setStyleSheet("""
+                QMenu {
+                    background-color: #ffffff;
+                    border: 1px solid #ced4da;
+                    border-radius: 5px;
+                    padding: 5px;
+                }
+                QMenu::item {
+                    padding: 8px 20px;
+                    border-radius: 3px;
+                    color: #1e293b;
+                }
+                QMenu::item:selected {
+                    background-color: #007bff;
+                    color: white;
+                }
+                QMenu::separator {
+                    height: 1px;
+                    background-color: #e2e8f0;
+                    margin: 4px 8px;
+                }
+            """)
         
         # Add actions
         menu.addAction("View Details", lambda: self.show_file_details(artifact))
-        if artifact['r_file_recovered']:
+        # Export logic: Show "Export Selected" when 1+ files selected, "Export File" only when exactly 1 file
+        if len(self.selected_artifacts) >= 1 and any(a.get('r_file_recovered') for a in self.selected_artifacts):
+            menu.addAction("Export Selected", self.export_selected)
+        elif artifact['r_file_recovered']:
             menu.addAction("Export File", lambda: self.export_single_file(artifact))
         if artifact.get('r_file_is_directory', False):
             menu.addAction("Browse Folder", lambda: self.browse_folder(artifact))
@@ -5662,26 +5738,60 @@ class MainWindow(QMainWindow):
         """Show context menu for a file tile."""
         # Create menu
         menu = QMenu(self)
-        menu.setStyleSheet("""
-            QMenu {
-                background-color: white;
-                border: 1px solid #ced4da;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QMenu::item {
-                padding: 8px 20px;
-                border-radius: 3px;
-            }
-            QMenu::item:selected {
-                background-color: #007bff;
-                color: white;
-            }
-        """)
+        # Theme-aware styling for readability in both light and dark modes
+        if self.is_dark_mode:
+            menu.setStyleSheet("""
+                QMenu {
+                    background-color: #0b1220;
+                    border: 1px solid #334155;
+                    border-radius: 8px;
+                    padding: 6px;
+                }
+                QMenu::item {
+                    padding: 8px 24px 8px 12px;
+                    border-radius: 4px;
+                    color: #e2e8f0;
+                }
+                QMenu::item:selected {
+                    background-color: #111827;
+                    color: #ffffff;
+                }
+                QMenu::separator {
+                    height: 1px;
+                    background-color: #1f2937;
+                    margin: 4px 8px;
+                }
+            """)
+        else:
+            menu.setStyleSheet("""
+                QMenu {
+                    background-color: #ffffff;
+                    border: 1px solid #ced4da;
+                    border-radius: 5px;
+                    padding: 5px;
+                }
+                QMenu::item {
+                    padding: 8px 20px;
+                    border-radius: 3px;
+                    color: #1e293b;
+                }
+                QMenu::item:selected {
+                    background-color: #007bff;
+                    color: white;
+                }
+                QMenu::separator {
+                    height: 1px;
+                    background-color: #e2e8f0;
+                    margin: 4px 8px;
+                }
+            """)
         
         # Add actions
         menu.addAction("View Details", lambda: self.show_file_details(artifact))
-        if artifact['r_file_recovered']:
+        # Export logic: Show "Export Selected" when 1+ files selected, "Export File" only when exactly 1 file
+        if len(self.selected_artifacts) >= 1 and any(a.get('r_file_recovered') for a in self.selected_artifacts):
+            menu.addAction("Export Selected", self.export_selected)
+        elif artifact['r_file_recovered']:
             menu.addAction("Export File", lambda: self.export_single_file(artifact))
         if artifact.get('r_file_is_directory', False):
             menu.addAction("Browse Folder", lambda: self.browse_folder(artifact))
@@ -6015,6 +6125,7 @@ class FileDetailsDialog(QDialog):
         self.parser = parser
         self.hash_results = {}
         self.timezone_str = timezone_str
+        self.is_dark_mode = bool(getattr(parent, "is_dark_mode", False))
         
         # Set dialog properties
         self.setWindowTitle("File Details")
@@ -6220,7 +6331,6 @@ class FileDetailsDialog(QDialog):
                 self.offset_text.setReadOnly(True)
                 self.offset_text.setFont(QFont("Courier New", 10))
                 self.offset_text.setMaximumWidth(90)
-                self.offset_text.setStyleSheet("background-color: #f0f0f0; color: #666666; border: 1px solid #ccc; border-right: none;")
                 self.offset_text.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
                 hex_container.addWidget(self.offset_text)
                 
@@ -6228,7 +6338,6 @@ class FileDetailsDialog(QDialog):
                 self.hex_text = QTextEdit()
                 self.hex_text.setReadOnly(True)
                 self.hex_text.setFont(QFont("Courier New", 10))
-                self.hex_text.setStyleSheet("border: 1px solid #ccc; border-left: none; border-right: none;")
                 self.hex_text.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
                 hex_container.addWidget(self.hex_text, 2)
                 
@@ -6236,8 +6345,39 @@ class FileDetailsDialog(QDialog):
                 self.ascii_text = QTextEdit()
                 self.ascii_text.setReadOnly(True)
                 self.ascii_text.setFont(QFont("Courier New", 10))
-                self.ascii_text.setStyleSheet("background-color: #f8f8f8; border: 1px solid #ccc; border-left: none;")
                 hex_container.addWidget(self.ascii_text, 1)
+
+                # Theme-aware styling for hex view
+                if self.is_dark_mode:
+                    offset_style = (
+                        "background-color: #0b1220; color: #e5e7eb; "
+                        "border: 1px solid #334155; border-right: none;"
+                    )
+                    hex_style = (
+                        "background-color: #0f172a; color: #e5e7eb; "
+                        "border: 1px solid #334155; border-left: none; border-right: none;"
+                    )
+                    ascii_style = (
+                        "background-color: #0b1220; color: #e5e7eb; "
+                        "border: 1px solid #334155; border-left: none;"
+                    )
+                else:
+                    offset_style = (
+                        "background-color: #f0f0f0; color: #666666; "
+                        "border: 1px solid #ccc; border-right: none;"
+                    )
+                    hex_style = (
+                        "background-color: #ffffff; color: #1e293b; "
+                        "border: 1px solid #ccc; border-left: none; border-right: none;"
+                    )
+                    ascii_style = (
+                        "background-color: #f8f8f8; color: #1e293b; "
+                        "border: 1px solid #ccc; border-left: none;"
+                    )
+
+                self.offset_text.setStyleSheet(offset_style)
+                self.hex_text.setStyleSheet(hex_style)
+                self.ascii_text.setStyleSheet(ascii_style)
                 
                 # Sync scrolling between all three columns
                 def sync_scroll(value):
